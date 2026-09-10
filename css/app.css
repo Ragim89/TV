@@ -233,6 +233,7 @@ button{cursor:pointer}
   -webkit-appearance:none;appearance:none;
 }
 .input:focus{outline:none;border-color:var(--accent-soft);background:var(--bg-2)}
+.input[inputmode="numeric"]{font-variant-numeric:tabular-nums;letter-spacing:.02em}
 .input::placeholder{color:var(--ink-3)}
 .input--sel{
   width:auto;flex:0 0 42%;
@@ -241,7 +242,7 @@ button{cursor:pointer}
 }
 input[type=number]{-moz-appearance:textfield}
 input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-input[type=time]{min-height:52px}
+input[type=time],input[type=date]{min-height:52px}
 
 /* ---------------- Результат ---------------- */
 .result{margin-top:40px;padding:24px 20px;border:1px solid var(--line);border-top-color:var(--line-2);

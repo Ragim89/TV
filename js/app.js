@@ -203,15 +203,48 @@ var Fmt = (function () {
     renderHistory();
   });
 
+  /* ================= Разряды в денежных полях ================= */
+  /* type="number" не принимает пробелы, поэтому эти поля текстовые:
+     цифры группируются по три, каретка остаётся на своём месте. */
+  function digitsOf(v) { return String(v == null ? '' : v).replace(/\D/g, ''); }
+
+  function groupDigits(d) {
+    return d.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  }
+
+  function setGrouped(el, value) {
+    var d = digitsOf(value).replace(/^0+(?=\d)/, '');
+    el.value = d ? groupDigits(d) : '';
+  }
+
+  function regroup(el) {
+    var caret = el.selectionStart;
+    var typedBefore = caret === null ? null : digitsOf(el.value.slice(0, caret)).length;
+    var d = digitsOf(el.value).slice(0, 12).replace(/^0+(?=\d)/, '');
+    el.value = d ? groupDigits(d) : '';
+    if (typedBefore === null) return;
+    var pos = 0, seen = 0;
+    while (pos < el.value.length && seen < typedBefore) {
+      if (el.value.charCodeAt(pos) > 47 && el.value.charCodeAt(pos) < 58) seen++;
+      pos++;
+    }
+    try { el.setSelectionRange(pos, pos); } catch (e) { /* поле вне фокуса */ }
+  }
+
+  function bindGrouped(el, onChange) {
+    on(el, 'input', function () { regroup(el); onChange(); });
+    on(el, 'blur', function () { regroup(el); });
+  }
+
   /* ================= Экран «Час» ================= */
   var fIncome = $('#f-income'), fPeriod = $('#f-period'), fExp = $('#f-expenses'),
       fHours = $('#f-hours'), fDays = $('#f-days');
 
   function fillHourInputs() {
     var s = Store.settings;
-    fIncome.value = s.income;
+    setGrouped(fIncome, s.income);
     fPeriod.value = s.incomePeriod;
-    fExp.value = s.expenses;
+    setGrouped(fExp, s.expenses);
     fHours.value = s.hoursPerDay;
     fDays.value = s.daysPerWeek;
   }
@@ -230,7 +263,14 @@ var Fmt = (function () {
   }
 
   function bindHourInputs() {
-    [[fIncome, 'income'], [fExp, 'expenses'], [fHours, 'hoursPerDay'], [fDays, 'daysPerWeek']].forEach(function (p) {
+    [[fIncome, 'income'], [fExp, 'expenses']].forEach(function (p) {
+      bindGrouped(p[0], function () {
+        Store.settings[p[1]] = Store.num(p[0].value);
+        Store.save();
+        renderHour(); renderBuy(); renderPurchases();
+      });
+    });
+    [[fHours, 'hoursPerDay'], [fDays, 'daysPerWeek']].forEach(function (p) {
       on(p[0], 'input', function () {
         Store.settings[p[1]] = Store.num(p[0].value);
         Store.save();
@@ -245,7 +285,7 @@ var Fmt = (function () {
   }
 
   /* ================= Экран «Покупка» ================= */
-  var bTitle = $('#b-title'), bPrice = $('#b-price'), bSave = $('#b-save');
+  var bTitle = $('#b-title'), bPrice = $('#b-price'), bDate = $('#b-date'), bSave = $('#b-save');
 
   function renderBuy() {
     var price = Store.num(bPrice.value), hv = Store.hourValue(), net = Store.netHourValue(), s = Store.settings;
@@ -255,6 +295,15 @@ var Fmt = (function () {
     txt($('#b-weeks'), Fmt.round(hours / Math.max(0.5, Store.num(s.hoursPerDay)) / Math.max(1, Store.num(s.daysPerWeek)), 1));
     txt($('#b-net'), net > 0 ? Fmt.hours(price / net) : 'расходы выше дохода');
     bSave.disabled = !(price > 0);
+  }
+
+  /* «10 сен», а год — только если он не текущий. */
+  function purchaseDate(p) {
+    var key = p.date || Store.key(new Date(p.at));
+    var d = Store.fromKey(key);
+    var out = d.getDate() + ' ' + MON_SHORT[d.getMonth()];
+    if (d.getFullYear() !== new Date().getFullYear()) out += ' ' + d.getFullYear();
+    return out;
   }
 
   function renderPurchases() {
@@ -270,7 +319,7 @@ var Fmt = (function () {
       name.textContent = p.title;
       var sub = document.createElement('span');
       sub.className = 'list__sub';
-      sub.textContent = Fmt.money(p.price, s.currency, 0) + ' · час по ' + Fmt.money(hv, s.currency, 0);
+      sub.textContent = purchaseDate(p) + ' · ' + Fmt.money(p.price, s.currency, 0) + ' · час по ' + Fmt.money(hv, s.currency, 0);
       name.appendChild(sub);
       var val = document.createElement('span');
       val.className = 'list__val';
@@ -286,18 +335,19 @@ var Fmt = (function () {
     });
   }
 
-  on(bPrice, 'input', renderBuy);
+  bindGrouped(bPrice, renderBuy);
   on(bSave, 'click', function () {
     var price = Store.num(bPrice.value);
     if (!(price > 0)) return;
-    Store.addPurchase((bTitle.value || '').trim() || 'Покупка', price);
+    Store.addPurchase((bTitle.value || '').trim() || 'Покупка', price, bDate.value || Store.key());
     bTitle.value = ''; bPrice.value = '';
+    bDate.value = Store.key();
     renderBuy(); renderPurchases();
     toast('Расчёт сохранён');
   });
 
   /* ================= Экран «История» ================= */
-  var range = 14;
+  var range = 30;
   $$('.seg__b[data-range]').forEach(function (b) {
     on(b, 'click', function () {
       range = parseInt(b.getAttribute('data-range'), 10);
@@ -318,6 +368,19 @@ var Fmt = (function () {
       rows.push({ key: k, date: dd, rec: rec, value: v });
     }
     box.innerHTML = '';
+
+    /* Ни одного начатого дня — стена из «разрывов» ничего не объясняет. */
+    var anyDay = rows.some(function (r) { return r.rec && r.rec.start; });
+    $('#hist-empty').classList.toggle('is-hidden', anyDay);
+    $('#hist-note').classList.toggle('is-hidden', !anyDay);
+    box.classList.toggle('is-hidden', !anyDay);
+    if (!anyDay) {
+      txt($('#s-streak'), '0');
+      txt($('#s-closed'), String(Store.closedCount()));
+      txt($('#s-best'), '—');
+      return;
+    }
+
     rows.forEach(function (r) {
       var li = document.createElement('li');
       var isToday = r.key === Store.key();
@@ -648,6 +711,7 @@ var Fmt = (function () {
     buildTicks();
     fillHourInputs();
     bindHourInputs();
+    bDate.value = Store.key();
     renderHour(); renderBuy(); renderPurchases(); renderWords(); renderHistory();
     renderToday(Date.now());
     renderInstall();

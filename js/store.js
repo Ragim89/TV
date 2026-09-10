@@ -83,7 +83,12 @@ var Store = (function () {
     if (s.incomePeriod === 'week') return v * WEEKS_PER_MONTH;
     return v;
   }
-  function num(v) { v = parseFloat(v); return isFinite(v) ? v : 0; }
+  /* Поля с разрядами приходят как «120 000», а запятую в дробях набирают чаще точки. */
+  function num(v) {
+    if (typeof v === 'string') v = v.replace(/[\s\u00A0\u202F]/g, '').replace(',', '.');
+    v = parseFloat(v);
+    return isFinite(v) ? v : 0;
+  }
 
   function hoursPerMonth() {
     var s = state.settings;
@@ -204,13 +209,20 @@ var Store = (function () {
   }
 
   /* ---------- покупки ---------- */
-  function addPurchase(title, price) {
+  function addPurchase(title, price, date) {
     state.purchases.unshift({
       id: String(Date.now()) + Math.random().toString(36).slice(2, 7),
       title: title || 'Без названия',
       price: num(price),
       hourValue: hourValue(),
+      date: date || key(),
       at: Date.now()
+    });
+    /* Свежая покупка сверху: сначала по дате, при равной дате — по времени записи. */
+    state.purchases.sort(function (a, b) {
+      var ad = a.date || key(new Date(a.at)), bd = b.date || key(new Date(b.at));
+      if (ad !== bd) return ad < bd ? 1 : -1;
+      return b.at - a.at;
     });
     if (state.purchases.length > 200) state.purchases.length = 200;
     save();
