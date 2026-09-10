@@ -1,17 +1,17 @@
 /* ==========================================================================
-   TIME VALUE — приложение. Палитра: графит + тёплое золото.
+   TIME VALUE — приложение. Палитра: глубокий синий + тёплое золото.
    Токены один в один из docs/PROMPT-STYLE.md.
    ========================================================================== */
 
 :root{
-  --bg:#06060A;
-  --bg-2:#0C0B10;
-  --bg-3:#131118;
+  --bg:#091426;
+  --bg-2:#0E1C33;
+  --bg-3:#152741;
   --line:rgba(255,255,255,.11);
   --line-2:rgba(255,255,255,.20);
   --ink:#F8F6F2;
   --ink-2:#B6B1A8;
-  --ink-3:#78736C;
+  --ink-3:#8A857C;
   --gold:#D9A441;
   --gold-lt:#F2CD84;
   --gold-hi:#FFF2D6;
@@ -31,7 +31,7 @@
   --pad:24px;
 }
 
-/* Исполнение корпуса меняет только акцент. База остаётся графитовой. */
+/* Исполнение корпуса меняет только акцент. База остаётся синей. */
 body[data-variant="titan"]{--accent:#D6DCE5;--accent-soft:rgba(214,220,229,.50);--accent-dim:rgba(214,220,229,.10);--stage-glow:rgba(140,152,170,.32)}
 body[data-variant="blue"]{--accent:#9EC6F7;--accent-soft:rgba(158,198,247,.55);--accent-dim:rgba(158,198,247,.12);--stage-glow:rgba(62,133,228,.38)}
 body[data-variant="gold"]{--accent:#FFDCA8;--accent-soft:rgba(255,220,168,.55);--accent-dim:rgba(255,220,168,.12);--stage-glow:rgba(232,176,92,.42)}
@@ -52,7 +52,7 @@ p{margin:0}
 ul,ol{margin:0;padding:0;list-style:none}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
-::selection{background:var(--gold);color:#0B0B0D}
+::selection{background:var(--gold);color:#091426}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .is-hidden{display:none !important}
 [hidden]{display:none !important}
@@ -92,7 +92,7 @@ button{cursor:pointer}
   height:calc(56px + env(safe-area-inset-top));
   padding:env(safe-area-inset-top) var(--pad) 0;
   display:flex;align-items:center;justify-content:space-between;
-  background:linear-gradient(to bottom,rgba(6,6,10,.94),rgba(6,6,10,.72));
+  background:linear-gradient(to bottom,rgba(9,20,38,.94),rgba(9,20,38,.72));
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   border-bottom:1px solid var(--line);
 }
@@ -179,7 +179,7 @@ button{cursor:pointer}
 }
 .btn--gold{
   background:linear-gradient(180deg,var(--gold-lt),var(--gold));
-  color:#0B0B0D;border-color:var(--gold-dk);
+  color:#091426;border-color:var(--gold-dk);
 }
 .btn--gold:active{transform:translateY(1px);background:linear-gradient(180deg,var(--gold),var(--gold-dk))}
 .btn--ghost{background:transparent;border-color:var(--line-2);color:var(--ink-2)}
@@ -282,7 +282,7 @@ input[type=time]{min-height:52px}
 .tabs{
   position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;
   padding:0 6px env(safe-area-inset-bottom);
-  background:linear-gradient(to top,rgba(6,6,10,.97),rgba(6,6,10,.82));
+  background:linear-gradient(to top,rgba(9,20,38,.97),rgba(9,20,38,.82));
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   border-top:1px solid var(--line);
 }
@@ -300,7 +300,7 @@ input[type=time]{min-height:52px}
 .tab.is-on::after{width:22px}
 
 /* ---------------- Панель настроек ---------------- */
-.scrim{position:fixed;inset:0;z-index:50;background:rgba(4,4,7,.72);
+.scrim{position:fixed;inset:0;z-index:50;background:rgba(5,11,22,.74);
   backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
   animation:fade .3s var(--ease) both}
 @keyframes fade{from{opacity:0}to{opacity:1}}
