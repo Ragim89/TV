@@ -114,8 +114,30 @@ button{cursor:pointer}
 .view > .h2 + .lead{margin-top:10px}
 .view > .h3{margin-top:48px}
 
+/* ---------------- Соцсети ---------------- */
+/* Монохромные линии, а не фирменные логотипы: цветные пятна ломают
+   правило одного акцента на экране. */
+.social{display:flex;justify-content:center;gap:14px;margin-top:22px}
+.social__a{
+  width:44px;height:44px;display:grid;place-items:center;
+  border-radius:12px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .28s var(--ease);
+}
+.social__a svg{
+  width:20px;height:20px;fill:none;stroke:var(--ink-3);stroke-width:1.3;
+  stroke-linecap:round;stroke-linejoin:round;
+  transition:stroke .28s var(--ease);
+}
+.social__a:hover svg,.social__a:active svg{stroke:var(--accent)}
+.social__a:active{background:var(--bg-3)}
+.social__a:focus-visible{outline:1px solid var(--accent);outline-offset:2px}
+/* Адрес ещё не указан — иконка приглушена, но остаётся нажимаемой. */
+.social__a.is-off svg{stroke:var(--ink-3);opacity:.42}
+.social__a.is-off:hover svg,.social__a.is-off:active svg{stroke:var(--ink-3)}
+
 /* ---------------- Циферблат на 24 часа ---------------- */
-.dial{position:relative;width:min(100%,236px);aspect-ratio:1;margin:20px auto 4px}
+.dial{position:relative;width:min(100%,236px);aspect-ratio:1;margin:14px auto 4px}
 /* Один источник света: мягкий ореол по ободу, не за цифрами. */
 .dial::before{
   content:"";position:absolute;inset:-6%;border-radius:50%;opacity:.38;

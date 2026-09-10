@@ -1,3 +1,13 @@
+/* Ссылки на соцсети с главного экрана.
+   Пустая строка — иконка приглушена и по нажатию говорит, что адреса ещё нет.
+   Чтобы включить, впиши сюда полный адрес и всё заработает. */
+var SOCIAL = {
+  youtube:  '',
+  telegram: 'https://t.me/RG89tg',
+  whatsapp: '',
+  linkedin: ''
+};
+
 /* TIME VALUE — сборка экранов и живой счётчик. */
 var Fmt = (function () {
   'use strict';
@@ -530,6 +540,36 @@ var Fmt = (function () {
     toast('Данные стёрты');
   });
 
+  /* ================= Соцсети ================= */
+  function bindSocial() {
+    $$('.social__a').forEach(function (a) {
+      var name = a.getAttribute('data-social');
+      var label = a.getAttribute('data-label') || name;
+      var url = SOCIAL[name] || '';
+      if (url) {
+        a.href = url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        return;
+      }
+      /* Ссылки пока нет. Иконка остаётся нажимаемой и с клавиатуры тоже:
+         aria-disabled здесь был бы неверен — кнопка работает, просто говорит,
+         что адреса ещё нет. Состояние вынесено в подпись. */
+      a.classList.add('is-off');
+      a.setAttribute('role', 'button');
+      a.setAttribute('tabindex', '0');
+      a.setAttribute('aria-label', label + ' — адрес пока не указан');
+      function explain(e) {
+        e.preventDefault();
+        toast('Адрес ' + label + ' пока не указан');
+      }
+      on(a, 'click', explain);
+      on(a, 'keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') explain(e);
+      });
+    });
+  }
+
   /* ================= Установка на телефон ================= */
   var deferredPrompt = null;
 
@@ -610,6 +650,7 @@ var Fmt = (function () {
     renderHour(); renderBuy(); renderPurchases(); renderWords(); renderHistory();
     renderToday(Date.now());
     renderInstall();
+    bindSocial();
     requestAnimationFrame(loop);
 
     document.addEventListener('visibilitychange', function () {
