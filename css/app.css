@@ -107,19 +107,31 @@ button{cursor:pointer}
 .iconbtn svg{width:20px;height:20px;fill:none;stroke:var(--ink-2);stroke-width:1.2;stroke-linecap:round}
 
 /* ---------------- Экраны ---------------- */
-.view{display:none;padding:32px var(--pad) 40px;max-width:560px;margin:0 auto}
+.view{display:none;padding:22px var(--pad) 40px;max-width:560px;margin:0 auto}
 .view.is-active{display:block;animation:rise .6s var(--ease) both}
+#view-today{padding-top:14px}
 @keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 .view > * + *{margin-top:18px}
+/* Скрытый элемент не должен оставлять после себя отступ. */
+.view > [hidden] + *{margin-top:0}
 .view > .h2 + .lead{margin-top:10px}
 .view > .h3{margin-top:48px}
+
+/* ---------------- Верхняя строка экрана «Сегодня» ---------------- */
+/* Дата и соцсети в одной строке: одинокая подпись оставляла наверху
+   пустую полосу и отодвигала главную цифру за нижний край. */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;flex-wrap:wrap;min-height:40px;
+}
+.topbar .micro{flex:1 1 auto;min-width:0;white-space:nowrap}
 
 /* ---------------- Соцсети ---------------- */
 /* Монохромные линии, а не фирменные логотипы: цветные пятна ломают
    правило одного акцента на экране. */
-.social{display:flex;justify-content:center;gap:14px;margin-top:22px}
+.social{display:flex;justify-content:flex-end;gap:2px;margin:0;flex:0 0 auto}
 .social__a{
-  width:44px;height:44px;display:grid;place-items:center;
+  width:40px;height:40px;display:grid;place-items:center;
   border-radius:12px;cursor:pointer;
   -webkit-tap-highlight-color:transparent;
   transition:background .28s var(--ease);
@@ -137,7 +149,7 @@ button{cursor:pointer}
 .social__a.is-off:hover svg,.social__a.is-off:active svg{stroke:var(--ink-3)}
 
 /* ---------------- Циферблат на 24 часа ---------------- */
-.dial{position:relative;width:min(100%,236px);aspect-ratio:1;margin:14px auto 4px}
+.dial{position:relative;width:min(100%,236px);aspect-ratio:1;margin:8px auto 4px}
 /* Один источник света: мягкий ореол по ободу, не за цифрами. */
 .dial::before{
   content:"";position:absolute;inset:-6%;border-radius:50%;opacity:.38;
@@ -176,12 +188,12 @@ button{cursor:pointer}
   font-family:var(--label);font-size:10px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase}
 
 .install{
-  padding:20px;border:1px solid var(--line);border-top-color:var(--line-2);
+  padding:16px 18px;border:1px solid var(--line);border-top-color:var(--line-2);
   border-radius:var(--radius);background:var(--bg-2);
 }
-.install__text{margin-top:10px;font-size:14.5px;color:var(--ink-2);line-height:1.55}
-.install__row{display:flex;gap:10px;margin-top:18px}
-.btn--inline{margin-top:0;flex:1;padding:13px 14px;font-size:10.5px;letter-spacing:.14em}
+.install__text{font-size:13.5px;color:var(--ink-2);line-height:1.5}
+.install__row{display:flex;gap:8px;margin-top:14px}
+.btn--inline{margin-top:0;flex:1;padding:11px 12px;font-size:10px;letter-spacing:.12em}
 
 .tile{
   margin-top:36px;padding:20px;border:1px solid var(--line);border-radius:var(--radius);
