@@ -270,6 +270,13 @@
       <button class="chip" data-variant="gold">Розовое золото</button>
     </div>
 
+    <p class="micro">ПРИ ОТКРЫТИИ</p>
+    <label class="switch">
+      <input type="checkbox" id="g-enabled">
+      <span class="switch__track"><span class="switch__dot"></span></span>
+      <span class="switch__label">Встречать фразой дня</span>
+    </label>
+
     <p class="micro">НАПОМИНАНИЯ</p>
     <label class="switch">
       <input type="checkbox" id="n-enabled">
@@ -297,6 +304,21 @@
     <button class="btn btn--gold" id="sheet-close">Готово</button>
   </div>
 </aside>
+
+<!-- ================= ФРАЗА ДНЯ ПРИ ОТКРЫТИИ ================= -->
+<div class="greet" id="greet" hidden role="dialog" aria-modal="true" aria-labelledby="greet-text">
+  <div class="greet__card" id="greet-card" tabindex="-1">
+    <span class="greet__rule" aria-hidden="true"></span>
+    <p class="micro" id="greet-num">—</p>
+    <p class="greet__text" id="greet-text">—</p>
+    <div class="greet__row">
+      <button class="markbtn" id="greet-fav" aria-label="В избранное" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8-5.2-3-5.2 3 1.2-5.8-4.4-4 5.9-.7z"/></svg>
+      </button>
+      <button class="btn btn--gold btn--inline" id="greet-ok">Продолжить</button>
+    </div>
+  </div>
+</div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 

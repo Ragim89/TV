@@ -15,6 +15,8 @@ var Store = (function () {
       hoursPerDay: 8,
       daysPerWeek: 5,
       variant: 'steel',
+      greet: true,
+      greetedOn: '',
       notif: { enabled: false, morning: '08:30', evening: '21:30', lastMorning: '', lastEvening: '' }
     },
     days: {},

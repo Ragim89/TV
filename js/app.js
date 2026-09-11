@@ -499,6 +499,45 @@ var Fmt = (function () {
   });
   on($('#words-more'), 'click', function () { wordsShown += 60; renderWords(); });
 
+  /* ================= Фраза дня при открытии ================= */
+  var greetBox = $('#greet');
+
+  function openGreet() {
+    var i = todayQuoteIndex();
+    txt($('#greet-text'), QUOTES[i]);
+    txt($('#greet-num'), 'ФРАЗА ДНЯ · ' + (i + 1) + ' ИЗ 365');
+    $('#greet-fav').setAttribute('aria-pressed', Store.isFav(i) ? 'true' : 'false');
+    greetBox.hidden = false;
+    document.body.style.overflow = 'hidden';
+    /* Отметку ставим при показе: приложение можно закрыть, не нажав кнопку,
+       и тогда фраза не должна встречать во второй раз за день. */
+    Store.settings.greetedOn = Store.key();
+    Store.save();
+    try { $('#greet-card').focus(); } catch (e) {}
+  }
+
+  function closeGreet() {
+    if (greetBox.hidden) return;
+    greetBox.hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  /* Раз в сутки и только если встреча не выключена в настройках. */
+  function maybeGreet() {
+    if (!Store.settings.greet) return;
+    if (Store.settings.greetedOn === Store.key()) return;
+    openGreet();
+  }
+
+  on($('#greet-ok'), 'click', closeGreet);
+  on(greetBox, 'click', function (e) { if (e.target === greetBox) closeGreet(); });
+  on($('#greet-fav'), 'click', function () {
+    var i = todayQuoteIndex();
+    var added = Store.toggleFav(i);
+    $('#greet-fav').setAttribute('aria-pressed', added ? 'true' : 'false');
+    renderWords();
+  });
+
   /* ================= Настройки ================= */
   var sheet = $('#sheet'), scrim = $('#scrim');
   function openSheet() {
@@ -513,7 +552,11 @@ var Fmt = (function () {
   on($('#open-settings'), 'click', openSheet);
   on($('#sheet-close'), 'click', closeSheet);
   on(scrim, 'click', closeSheet);
-  on(document, 'keydown', function (e) { if (e.key === 'Escape' && !sheet.hidden) closeSheet(); });
+  on(document, 'keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (!greetBox.hidden) { closeGreet(); return; }
+    if (!sheet.hidden) closeSheet();
+  });
 
   function syncSettings() {
     var s = Store.settings;
@@ -523,6 +566,7 @@ var Fmt = (function () {
     $$('#chips-variant .chip').forEach(function (c) {
       c.classList.toggle('is-on', c.getAttribute('data-variant') === s.variant);
     });
+    $('#g-enabled').checked = !!s.greet;
     $('#n-enabled').checked = !!s.notif.enabled;
     $('#n-morning').value = s.notif.morning;
     $('#n-evening').value = s.notif.evening;
@@ -544,6 +588,11 @@ var Fmt = (function () {
     });
   });
 
+  on($('#g-enabled'), 'change', function (e) {
+    Store.settings.greet = !!e.target.checked;
+    Store.save();
+    toast(e.target.checked ? 'Будет встречать фразой дня' : 'Встреча выключена');
+  });
   on($('#n-enabled'), 'change', function (e) {
     if (e.target.checked) {
       Notify.enable(function (ok, err) {
@@ -717,6 +766,7 @@ var Fmt = (function () {
     renderToday(Date.now());
     renderInstall();
     bindSocial();
+    maybeGreet();
     requestAnimationFrame(loop);
 
     document.addEventListener('visibilitychange', function () {
@@ -727,6 +777,7 @@ var Fmt = (function () {
         if (view === 'history') renderHistory();
         Notify.catchUp();
         Notify.schedule();
+        maybeGreet();
       }
     });
 
