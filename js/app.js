@@ -693,6 +693,7 @@ var Fmt = (function () {
   });
 
   /* ================= Живой цикл ================= */
+  var swReg = null;
   var lastTick = 0;
   function loop(ts) {
     var now = Date.now();
@@ -720,6 +721,7 @@ var Fmt = (function () {
 
     document.addEventListener('visibilitychange', function () {
       if (!document.hidden) {
+        if (swReg && swReg.update) { try { swReg.update(); } catch (e) {} }
         Store.sealStaleDays();
         renderToday(Date.now());
         if (view === 'history') renderHistory();
@@ -729,10 +731,22 @@ var Fmt = (function () {
     });
 
     if ('serviceWorker' in navigator) {
+      /* Новый воркер вступил в силу — значит, приехала новая версия.
+         Перезагружаемся один раз, чтобы она заработала сразу, а не со
+         следующего запуска. На первой установке контроллера ещё не было,
+         тогда перезагружать нечего. */
+      var hadController = !!navigator.serviceWorker.controller;
+      var reloading = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (!hadController || reloading) return;
+        reloading = true;
+        window.location.reload();
+      });
       navigator.serviceWorker.register('sw.js').then(function (reg) {
         Notify.setReg(reg);
         Notify.catchUp();
         Notify.schedule();
+        swReg = reg;
       }).catch(function () {
         Notify.catchUp();
         Notify.schedule();

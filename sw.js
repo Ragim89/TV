@@ -1,5 +1,14 @@
-/* Service worker: офлайн-оболочка и открытие приложения по уведомлению. */
-var CACHE = 'timevalue-v1';
+/* Service worker: офлайн-оболочка и открытие приложения по уведомлению.
+
+   Стратегия обновления. Раньше всё, кроме разметки, отдавалось из кэша и
+   никогда не перепроверялось — установленное приложение навсегда оставалось
+   на той версии, которую скачало при первой установке. Теперь файлы отдаются
+   из кэша мгновенно, но параллельно скачиваются заново, так что следующий
+   запуск уже свежий. Страница сама перезагружается, когда новый воркер
+   вступает в силу. */
+
+var VERSION = 'v3';
+var CACHE = 'timevalue-' + VERSION;
 var SHELL = [
   './',
   './index.html',
@@ -16,7 +25,9 @@ var SHELL = [
 
 self.addEventListener('install', function (e) {
   e.waitUntil(
-    caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); })
+    caches.open(CACHE)
+      .then(function (c) { return c.addAll(SHELL); })
+      .then(function () { return self.skipWaiting(); })
   );
 });
 
@@ -28,36 +39,40 @@ self.addEventListener('activate', function (e) {
   );
 });
 
+function putInCache(req, res) {
+  if (!res || res.status !== 200 || res.type !== 'basic') return res;
+  var copy = res.clone();
+  caches.open(CACHE).then(function (c) { c.put(req, copy); });
+  return res;
+}
+
 self.addEventListener('fetch', function (e) {
   var req = e.request;
   if (req.method !== 'GET') return;
-  var url = new URL(req.url);
+
+  var url;
+  try { url = new URL(req.url); } catch (err) { return; }
   if (url.origin !== self.location.origin) return; /* шрифты идут своим путём */
 
-  /* Разметка — из сети, чтобы обновление приезжало сразу; кэш как запас. */
+  /* Разметка — из сети, кэш только как запас на офлайн. */
   if (req.mode === 'navigate' || (req.headers.get('accept') || '').indexOf('text/html') !== -1) {
     e.respondWith(
-      fetch(req).then(function (res) {
-        var copy = res.clone();
-        caches.open(CACHE).then(function (c) { c.put(req, copy); });
-        return res;
-      }).catch(function () {
-        return caches.match(req).then(function (r) { return r || caches.match('./index.html'); });
-      })
+      fetch(req)
+        .then(function (res) { return putInCache(req, res); })
+        .catch(function () {
+          return caches.match(req).then(function (r) { return r || caches.match('./index.html'); });
+        })
     );
     return;
   }
 
+  /* Остальное — сразу из кэша, обновление скачивается в фоне. */
   e.respondWith(
     caches.match(req).then(function (hit) {
-      if (hit) return hit;
-      return fetch(req).then(function (res) {
-        if (res && res.status === 200 && res.type === 'basic') {
-          var copy = res.clone();
-          caches.open(CACHE).then(function (c) { c.put(req, copy); });
-        }
-        return res;
-      }).catch(function () { return hit; });
+      var fromNetwork = fetch(req)
+        .then(function (res) { return putInCache(req, res); })
+        .catch(function () { return hit; });
+      return hit || fromNetwork;
     })
   );
 });
